@@ -13,6 +13,44 @@ export default function Index() {
   const [showPassword, setShowPassword] = useState(false);
   const [results, setResults] = useState<Array<{ username: string; password: string; status: 'valid' | 'invalid' }>>([]);
   const [expandedResult, setExpandedResult] = useState<number | null>(null);
+  
+  const [bruteUsername, setBruteUsername] = useState('');
+  const [passwordList, setPasswordList] = useState('');
+  const [isBruting, setIsBruting] = useState(false);
+  const [bruteProgress, setBruteProgress] = useState(0);
+  const [bruteResults, setBruteResults] = useState<Array<{ password: string; success: boolean }>>([]);
+  const [foundPassword, setFoundPassword] = useState<string | null>(null);
+
+  const handleBrute = () => {
+    setIsBruting(true);
+    setBruteProgress(0);
+    setBruteResults([]);
+    setFoundPassword(null);
+
+    const passwords = passwordList.split('\n').filter(p => p.trim());
+    let processed = 0;
+    let found = false;
+
+    passwords.forEach((password, index) => {
+      setTimeout(() => {
+        if (found) return;
+        
+        const success = Math.random() > 0.85;
+        
+        setBruteResults(prev => [...prev, { password, success }]);
+        processed++;
+        setBruteProgress((processed / passwords.length) * 100);
+
+        if (success && !found) {
+          found = true;
+          setFoundPassword(password);
+          setTimeout(() => setIsBruting(false), 500);
+        } else if (processed === passwords.length) {
+          setTimeout(() => setIsBruting(false), 500);
+        }
+      }, index * 600);
+    });
+  };
 
   const handleCheck = () => {
     setIsChecking(true);
@@ -98,6 +136,13 @@ export default function Index() {
                 >
                   <Icon name="Terminal" size={16} className="mr-2" />
                   ЧЕКЕР
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="brute"
+                  className="font-orbitron data-[state=active]:bg-primary/10 data-[state=active]:text-primary border-b-2 border-transparent data-[state=active]:border-primary rounded-none"
+                >
+                  <Icon name="Key" size={16} className="mr-2" />
+                  БРУТФОРС
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -294,6 +339,129 @@ export default function Index() {
                                   </div>
                                 </div>
                               )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="brute" className="mt-0">
+              <div className="max-w-4xl mx-auto">
+                <Card className="bg-card/50 border-primary/30 p-8 shadow-[0_0_30px_rgba(0,255,65,0.1)]">
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3 pb-4 border-b border-primary/20">
+                      <Icon name="Key" className="text-primary" size={28} />
+                      <h2 className="text-2xl font-orbitron font-bold text-primary">PASSWORD BRUTEFORCE</h2>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-orbitron text-primary mb-2">
+                          TARGET USERNAME
+                        </label>
+                        <input
+                          type="text"
+                          value={bruteUsername}
+                          onChange={(e) => setBruteUsername(e.target.value)}
+                          placeholder="username123"
+                          className="w-full bg-input border border-primary/30 rounded px-4 py-3 text-primary font-mono text-sm focus:outline-none focus:border-primary focus:shadow-[0_0_10px_rgba(0,255,65,0.3)] transition-all"
+                          disabled={isBruting}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-orbitron text-primary mb-2">
+                          PASSWORD WORDLIST
+                        </label>
+                        <textarea
+                          value={passwordList}
+                          onChange={(e) => setPasswordList(e.target.value)}
+                          placeholder="password123&#10;qwerty123&#10;roblox2024&#10;admin123"
+                          className="w-full h-40 bg-input border border-primary/30 rounded px-4 py-3 text-primary font-mono text-sm focus:outline-none focus:border-primary focus:shadow-[0_0_10px_rgba(0,255,65,0.3)] transition-all resize-none"
+                          disabled={isBruting}
+                        />
+                      </div>
+
+                      {isBruting && (
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm font-orbitron text-primary/70">
+                            <span>ATTEMPTING...</span>
+                            <span>{Math.round(bruteProgress)}%</span>
+                          </div>
+                          <Progress value={bruteProgress} className="h-2 bg-muted" />
+                        </div>
+                      )}
+
+                      {foundPassword && (
+                        <div className="p-4 bg-primary/20 border-2 border-primary rounded animate-glow-pulse">
+                          <div className="flex items-center gap-3">
+                            <Icon name="CheckCircle2" className="text-primary" size={24} />
+                            <div className="flex-1">
+                              <p className="font-orbitron font-bold text-primary text-sm">PASSWORD FOUND!</p>
+                              <p className="font-mono text-primary mt-1">{foundPassword}</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-primary text-primary hover:bg-primary/10 font-orbitron"
+                              onClick={() => navigator.clipboard.writeText(foundPassword)}
+                            >
+                              <Icon name="Copy" size={14} className="mr-1" />
+                              COPY
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={handleBrute}
+                        disabled={!bruteUsername.trim() || !passwordList.trim() || isBruting}
+                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-orbitron text-lg py-6 shadow-[0_0_20px_rgba(0,255,65,0.3)] hover:shadow-[0_0_30px_rgba(0,255,65,0.5)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isBruting ? (
+                          <>
+                            <Icon name="Loader2" size={20} className="mr-2 animate-spin" />
+                            BRUTE FORCING...
+                          </>
+                        ) : (
+                          <>
+                            <Icon name="Zap" size={20} className="mr-2" />
+                            START ATTACK
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    {bruteResults.length > 0 && (
+                      <div className="space-y-3 pt-4 border-t border-primary/20">
+                        <h3 className="font-orbitron font-bold text-primary">ATTEMPT LOG</h3>
+                        <div className="space-y-1 max-h-64 overflow-y-auto">
+                          {bruteResults.map((result, i) => (
+                            <div
+                              key={i}
+                              className={`flex items-center justify-between p-2 rounded text-sm ${
+                                result.success
+                                  ? 'bg-primary/20 border border-primary/40'
+                                  : 'bg-muted/20 border border-primary/10'
+                              }`}
+                            >
+                              <span className="font-mono text-xs text-primary/80">{result.password}</span>
+                              <div className="flex items-center gap-2">
+                                <Icon
+                                  name={result.success ? 'CheckCircle2' : 'XCircle'}
+                                  size={14}
+                                  className={result.success ? 'text-primary' : 'text-primary/30'}
+                                />
+                                <span className={`font-orbitron text-xs ${
+                                  result.success ? 'text-primary font-bold' : 'text-primary/40'
+                                }`}>
+                                  {result.success ? 'SUCCESS' : 'FAILED'}
+                                </span>
+                              </div>
                             </div>
                           ))}
                         </div>
