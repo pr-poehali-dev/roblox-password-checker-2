@@ -15,6 +15,9 @@ export default function Index() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [recentAttempts, setRecentAttempts] = useState<Array<{ password: string; timestamp: number }>>([]);
+  const [hackingStage, setHackingStage] = useState<string>('');
+  const [accountData, setAccountData] = useState<any>(null);
+  const [showAccountInfo, setShowAccountInfo] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const speedIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -67,7 +70,7 @@ export default function Index() {
     
     if (success) {
       setFoundPassword(password);
-      stopAttack();
+      initiateHack(password);
     }
   };
 
@@ -91,6 +94,44 @@ export default function Index() {
     setIsRunning(false);
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (speedIntervalRef.current) clearInterval(speedIntervalRef.current);
+    setHackingStage('');
+  };
+
+  const initiateHack = async (password: string) => {
+    const stages = [
+      'Connecting to Roblox servers...',
+      'Bypassing security protocols...',
+      'Authenticating credentials...',
+      'Accessing account database...',
+      'Retrieving account information...',
+      'Extracting user data...',
+      'Hack completed successfully!'
+    ];
+
+    for (let i = 0; i < stages.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setHackingStage(stages[i]);
+    }
+
+    const mockAccountData = {
+      userId: Math.floor(Math.random() * 9000000) + 1000000,
+      displayName: targetUsername,
+      created: new Date(Date.now() - Math.floor(Math.random() * 365 * 5) * 24 * 60 * 60 * 1000).toLocaleDateString(),
+      robux: Math.floor(Math.random() * 10000),
+      premium: Math.random() > 0.5,
+      followers: Math.floor(Math.random() * 5000),
+      following: Math.floor(Math.random() * 1000),
+      friends: Math.floor(Math.random() * 200),
+      badges: Math.floor(Math.random() * 50),
+      gamesPlayed: Math.floor(Math.random() * 100)
+    };
+
+    setAccountData(mockAccountData);
+    setShowAccountInfo(true);
+    
+    setTimeout(() => {
+      stopAttack();
+    }, 1000);
   };
 
   useEffect(() => {
@@ -205,28 +246,133 @@ export default function Index() {
               </Card>
             </div>
 
-            {foundPassword && (
+            {hackingStage && (
               <Card className="bg-primary/20 border-2 border-primary p-6 shadow-[0_0_30px_rgba(0,255,65,0.4)] animate-glow-pulse">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary/30 border-2 border-primary rounded-full flex items-center justify-center">
-                    <Icon name="CheckCircle2" className="text-primary" size={28} />
-                  </div>
+                  <Icon name="Loader2" className="text-primary animate-spin" size={32} />
                   <div className="flex-1">
-                    <h3 className="font-orbitron font-bold text-primary text-xl mb-1">PASSWORD CRACKED!</h3>
-                    <p className="text-sm text-primary/80 font-orbitron mb-2">Target: {targetUsername}</p>
-                    <div className="flex items-center gap-3">
-                      <code className="bg-background/50 px-4 py-2 rounded border border-primary/40 text-primary font-mono text-lg">
-                        {foundPassword}
-                      </code>
-                      <Button
-                        variant="outline"
-                        className="border-primary text-primary hover:bg-primary/10 font-orbitron"
-                        onClick={() => navigator.clipboard.writeText(`${targetUsername}:${foundPassword}`)}
-                      >
-                        <Icon name="Copy" size={16} className="mr-2" />
-                        COPY
-                      </Button>
+                    <h3 className="font-orbitron font-bold text-primary text-xl mb-1">HACKING IN PROGRESS...</h3>
+                    <p className="text-sm text-primary/80 font-mono animate-pulse">{hackingStage}</p>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {showAccountInfo && accountData && (
+              <Card className="bg-primary/20 border-2 border-primary p-6 shadow-[0_0_30px_rgba(0,255,65,0.4)]">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4 pb-4 border-b border-primary/30">
+                    <div className="w-12 h-12 bg-primary/30 border-2 border-primary rounded-full flex items-center justify-center">
+                      <Icon name="CheckCircle2" className="text-primary" size={28} />
                     </div>
+                    <div className="flex-1">
+                      <h3 className="font-orbitron font-bold text-primary text-xl mb-1">ACCOUNT COMPROMISED!</h3>
+                      <p className="text-sm text-primary/80 font-orbitron">Full access granted to {targetUsername}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="border-primary text-primary hover:bg-primary/10 font-orbitron"
+                      onClick={() => navigator.clipboard.writeText(`${targetUsername}:${foundPassword}`)}
+                    >
+                      <Icon name="Copy" size={16} className="mr-2" />
+                      COPY CREDENTIALS
+                    </Button>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div className="bg-background/30 border border-primary/20 rounded p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon name="Key" className="text-primary" size={16} />
+                        <span className="text-xs text-primary/60 font-orbitron">PASSWORD</span>
+                      </div>
+                      <p className="font-mono text-primary font-bold">{foundPassword}</p>
+                    </div>
+
+                    <div className="bg-background/30 border border-primary/20 rounded p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon name="Hash" className="text-primary" size={16} />
+                        <span className="text-xs text-primary/60 font-orbitron">USER ID</span>
+                      </div>
+                      <p className="font-mono text-primary font-bold">{accountData.userId}</p>
+                    </div>
+
+                    <div className="bg-background/30 border border-primary/20 rounded p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon name="Calendar" className="text-primary" size={16} />
+                        <span className="text-xs text-primary/60 font-orbitron">CREATED</span>
+                      </div>
+                      <p className="font-mono text-primary font-bold">{accountData.created}</p>
+                    </div>
+
+                    <div className="bg-background/30 border border-primary/20 rounded p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon name="DollarSign" className="text-primary" size={16} />
+                        <span className="text-xs text-primary/60 font-orbitron">ROBUX</span>
+                      </div>
+                      <p className="font-mono text-primary font-bold">{accountData.robux.toLocaleString()}</p>
+                    </div>
+
+                    <div className="bg-background/30 border border-primary/20 rounded p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon name="Crown" className="text-primary" size={16} />
+                        <span className="text-xs text-primary/60 font-orbitron">PREMIUM</span>
+                      </div>
+                      <p className="font-mono text-primary font-bold">{accountData.premium ? 'YES' : 'NO'}</p>
+                    </div>
+
+                    <div className="bg-background/30 border border-primary/20 rounded p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon name="Users" className="text-primary" size={16} />
+                        <span className="text-xs text-primary/60 font-orbitron">FRIENDS</span>
+                      </div>
+                      <p className="font-mono text-primary font-bold">{accountData.friends}</p>
+                    </div>
+
+                    <div className="bg-background/30 border border-primary/20 rounded p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon name="UserPlus" className="text-primary" size={16} />
+                        <span className="text-xs text-primary/60 font-orbitron">FOLLOWERS</span>
+                      </div>
+                      <p className="font-mono text-primary font-bold">{accountData.followers.toLocaleString()}</p>
+                    </div>
+
+                    <div className="bg-background/30 border border-primary/20 rounded p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon name="Trophy" className="text-primary" size={16} />
+                        <span className="text-xs text-primary/60 font-orbitron">BADGES</span>
+                      </div>
+                      <p className="font-mono text-primary font-bold">{accountData.badges}</p>
+                    </div>
+
+                    <div className="bg-background/30 border border-primary/20 rounded p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon name="Gamepad2" className="text-primary" size={16} />
+                        <span className="text-xs text-primary/60 font-orbitron">GAMES PLAYED</span>
+                      </div>
+                      <p className="font-mono text-primary font-bold">{accountData.gamesPlayed}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-orbitron"
+                      onClick={() => window.open(`https://www.roblox.com/users/${accountData.userId}/profile`, '_blank')}
+                    >
+                      <Icon name="ExternalLink" size={16} className="mr-2" />
+                      OPEN PROFILE
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-primary text-primary hover:bg-primary/10 font-orbitron"
+                      onClick={() => {
+                        setShowAccountInfo(false);
+                        setFoundPassword(null);
+                        setAccountData(null);
+                      }}
+                    >
+                      <Icon name="RotateCcw" size={16} className="mr-2" />
+                      NEW TARGET
+                    </Button>
                   </div>
                 </div>
               </Card>
