@@ -10,6 +10,7 @@ export default function Index() {
   const [credentials, setCredentials] = useState('');
   const [isChecking, setIsChecking] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
   const [results, setResults] = useState<Array<{ username: string; status: 'valid' | 'invalid' }>>([]);
 
   const handleCheck = () => {
@@ -158,13 +159,26 @@ export default function Index() {
                         <label className="block text-sm font-orbitron text-primary mb-2">
                           INPUT DATA (username:password)
                         </label>
-                        <textarea
-                          value={credentials}
-                          onChange={(e) => setCredentials(e.target.value)}
-                          placeholder="user1:pass123&#10;user2:pass456&#10;user3:pass789"
-                          className="w-full h-40 bg-input border border-primary/30 rounded px-4 py-3 text-primary font-mono text-sm focus:outline-none focus:border-primary focus:shadow-[0_0_10px_rgba(0,255,65,0.3)] transition-all resize-none"
-                          disabled={isChecking}
-                        />
+                        <div className="relative">
+                          <textarea
+                            value={credentials}
+                            onChange={(e) => setCredentials(e.target.value)}
+                            placeholder="user1:pass123&#10;user2:pass456&#10;user3:pass789"
+                            className="w-full h-40 bg-input border border-primary/30 rounded px-4 py-3 text-primary font-mono text-sm focus:outline-none focus:border-primary focus:shadow-[0_0_10px_rgba(0,255,65,0.3)] transition-all resize-none pr-12"
+                            disabled={isChecking}
+                            style={{
+                              WebkitTextSecurity: showPassword ? 'none' : 'disc',
+                              textSecurity: showPassword ? 'none' : 'disc'
+                            }}
+                          />
+                          <button
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-3 text-primary/60 hover:text-primary transition-colors"
+                            type="button"
+                          >
+                            <Icon name={showPassword ? 'EyeOff' : 'Eye'} size={20} />
+                          </button>
+                        </div>
                       </div>
 
                       {isChecking && (
