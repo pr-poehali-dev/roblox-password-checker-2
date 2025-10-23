@@ -11,7 +11,8 @@ export default function Index() {
   const [isChecking, setIsChecking] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
-  const [results, setResults] = useState<Array<{ username: string; status: 'valid' | 'invalid' }>>([]);
+  const [results, setResults] = useState<Array<{ username: string; password: string; status: 'valid' | 'invalid' }>>([]);
+  const [expandedResult, setExpandedResult] = useState<number | null>(null);
 
   const handleCheck = () => {
     setIsChecking(true);
@@ -23,10 +24,14 @@ export default function Index() {
 
     lines.forEach((line, index) => {
       setTimeout(() => {
-        const [username] = line.split(':');
+        const [username, password] = line.split(':');
         const status = Math.random() > 0.5 ? 'valid' : 'invalid';
         
-        setResults(prev => [...prev, { username: username || `user${index}`, status }]);
+        setResults(prev => [...prev, { 
+          username: username || `user${index}`, 
+          password: password || 'unknown',
+          status 
+        }]);
         processed++;
         setProgress((processed / lines.length) * 100);
 
@@ -213,29 +218,82 @@ export default function Index() {
                     {results.length > 0 && (
                       <div className="space-y-3 pt-4 border-t border-primary/20">
                         <h3 className="font-orbitron font-bold text-primary">RESULTS</h3>
-                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                        <div className="space-y-2 max-h-96 overflow-y-auto">
                           {results.map((result, i) => (
                             <div
                               key={i}
-                              className={`flex items-center justify-between p-3 rounded border ${
+                              className={`rounded border transition-all ${
                                 result.status === 'valid'
                                   ? 'bg-primary/10 border-primary/40'
                                   : 'bg-destructive/10 border-destructive/40'
                               }`}
                             >
-                              <span className="font-mono text-sm">{result.username}</span>
-                              <div className="flex items-center gap-2">
-                                <Icon
-                                  name={result.status === 'valid' ? 'CheckCircle2' : 'XCircle'}
-                                  size={18}
-                                  className={result.status === 'valid' ? 'text-primary' : 'text-destructive'}
-                                />
-                                <span className={`font-orbitron text-xs font-bold ${
-                                  result.status === 'valid' ? 'text-primary' : 'text-destructive'
-                                }`}>
-                                  {result.status === 'valid' ? 'VALID' : 'INVALID'}
-                                </span>
+                              <div 
+                                className="flex items-center justify-between p-3 cursor-pointer hover:bg-background/20"
+                                onClick={() => setExpandedResult(expandedResult === i ? null : i)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <Icon
+                                    name={expandedResult === i ? 'ChevronDown' : 'ChevronRight'}
+                                    size={16}
+                                    className="text-primary/60"
+                                  />
+                                  <span className="font-mono text-sm">{result.username}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Icon
+                                    name={result.status === 'valid' ? 'CheckCircle2' : 'XCircle'}
+                                    size={18}
+                                    className={result.status === 'valid' ? 'text-primary' : 'text-destructive'}
+                                  />
+                                  <span className={`font-orbitron text-xs font-bold ${
+                                    result.status === 'valid' ? 'text-primary' : 'text-destructive'
+                                  }`}>
+                                    {result.status === 'valid' ? 'VALID' : 'INVALID'}
+                                  </span>
+                                </div>
                               </div>
+                              
+                              {expandedResult === i && (
+                                <div className="px-3 pb-3 pt-1 border-t border-primary/20 space-y-2 animate-accordion-down">
+                                  <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div>
+                                      <span className="text-primary/60 font-orbitron text-xs">USERNAME:</span>
+                                      <p className="font-mono text-primary mt-1">{result.username}</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-primary/60 font-orbitron text-xs">PASSWORD:</span>
+                                      <p className="font-mono text-primary mt-1">{result.password}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2 pt-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex-1 border-primary/30 text-primary hover:bg-primary/10 font-orbitron text-xs"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigator.clipboard.writeText(`${result.username}:${result.password}`);
+                                      }}
+                                    >
+                                      <Icon name="Copy" size={14} className="mr-1" />
+                                      COPY
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="flex-1 border-primary/30 text-primary hover:bg-primary/10 font-orbitron text-xs"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(`https://www.roblox.com/users/profile?username=${result.username}`, '_blank');
+                                      }}
+                                    >
+                                      <Icon name="ExternalLink" size={14} className="mr-1" />
+                                      PROFILE
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
